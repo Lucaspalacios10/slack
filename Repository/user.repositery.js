@@ -42,6 +42,26 @@ class UserRepository {
             }
         )
     }
+
+        async actualizarPorId (user_id, nuevosDatos){
+        await User.findByIdAndUpdate(
+            user_id, 
+            nuevosDatos, 
+            {
+                new: true
+            }
+        )
+    }
+
+    async obtenerTodos(){
+        const usuarios = await User.find()
+        return usuarios
+    }
+
+    async obtenerUnoPorId(user_id){
+        const usuario = await User.findById(user_id)
+        return usuario
+    }
 }
 
 const userRepository = new UserRepository()
