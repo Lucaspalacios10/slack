@@ -1,0 +1,48 @@
+import User from "../models/user.model.js"
+
+class UserRepository {
+    async crear(email, password, username)
+    {
+        await User.insertOne({email, password , username})
+    }
+    
+    async buscarUnoPorEmail(email){
+        const user = await User.findOne({email})
+        return user
+    }
+
+    async eliminarPorId(user_id)
+    {
+        await User.findByIdAndDelete(user_id)
+    }
+
+
+    async desactivarPorId (user_id)
+    {
+        const usuario = await User.findByIdAndUpdate(
+            user_id,{
+                active:false
+            },
+            {
+                new: true
+            }
+        )
+        console.log(usuario)
+        return usuario  
+    }
+
+
+    async actualizarPorId(user_id , nuevosDatos)
+    {
+        await User.findByIdAndUpdate(
+            user_id,
+            nuevosDatos,
+            {
+                new: true
+            }
+        )
+    }
+}
+
+const userRepository = new UserRepository()
+export default userRepository
