@@ -1,5 +1,5 @@
 import express from 'express';
-import userRepository from '../Repository/user.repositery.js';
+import userRepository from '../Repository/user.repository.js';
 import authController from '../Controller/auth.controller.js';
 
 
