@@ -7,7 +7,12 @@ const authRouter = express.Router()
 
 authRouter.post(
     '/register',
-    authController.post
+    authController.register
+)
+
+authRouter.post(
+    '/login',
+    authController.login
 )
 
 export default authRouter
