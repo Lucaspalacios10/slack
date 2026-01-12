@@ -18,7 +18,7 @@ Tomar el token que envie el cliente, verificar y determinar la sesion:
 
 import jwt from 'jsonwebtoken'
 import ENVIRONMENT from '../config/Environment.config.js'
-
+import ServerError from '../helpers/error.herlpers.js'
 function authMiddleware (request, response, next){
     try{
         /* Normalmente el token de auth se envia en el header 'Authorization' */
@@ -29,28 +29,13 @@ function authMiddleware (request, response, next){
         const authorization_header = request.headers.authorization
     
         if(!authorization_header){
-            return response.json(
-                { 
-                    ok: false,
-                    status: 401,
-                    message: 'No autorizado',
-                    data: null
-                }
-            )
+            throw new ServerError('No autorizado', 401)
         }
     
         const auth_token = authorization_header.split(' ')[1]
     
         if(!auth_token){
-    
-            return response.json(
-                { 
-                    ok: false,
-                    status: 401,
-                    message: 'No autorizado',
-                    data: null
-                }
-            )
+            throw new ServerError('No autorizado', 401)
         }
     
         const user = jwt.verify(auth_token, ENVIRONMENT.JWT_SECRET_KEY)
@@ -72,6 +57,16 @@ function authMiddleware (request, response, next){
                     data: null
                 }
             )
+        }
+
+        /* Si tiene status decimos que es un error controlado (osea es esperable) */
+        if(error.status){
+            return response.json({
+                status: error.status,
+                ok: false,
+                message: error.message,
+                data: null
+            })
         }
 
         return response.json({

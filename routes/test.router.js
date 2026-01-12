@@ -1,14 +1,14 @@
-import express from 'express';
-import  authMiddleware from '../middlewares/auth.middlewares.js';
+import express from 'express'
+import testController from '../Controller/test.controller.js'
+import authMiddleware from '../middlewares/auth.middlewares.js'
 
-const testRouter = express.Router();
+const testRouter = express.Router()
 
+//GET /api/test/
 testRouter.get(
-    '/',
-    (request, response) => {
-        response.send('test hecho')
-    }
-);
+    '/', 
+    testController.get
+)
 
 testRouter.get(
     '/authorized-test',
@@ -26,4 +26,4 @@ testRouter.get(
     }
 )
 
-export default testRouter;
+export default testRouter

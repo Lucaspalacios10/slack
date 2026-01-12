@@ -3,96 +3,221 @@ import userRepository from '../Repository/user.repository.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import ENVIRONMENT from '../config/Environment.config.js';
+import mail_transporter from '../config/mail.config.js';
+import ServerError from '../helpers/error.herlpers.js';
 
 class AuthController {
-    async register (request, response) {
+    async register(request, response) {
 
-        try{     
+        try {
 
-            const {email, password, username} = request.body
-            if(!email || !password || !username){
-                return response.send('Error: Nombre, email o usuario invalido')
+            const { email, password, username } = request.body
+
+            if (!email || !password || !username) {
+                throw new ServerError('Debes enviar todos los datos', 400)
             }
 
             const user = await userRepository.buscarUnoPorEmail(email)
-            if(user){
-                return response.send(`Usuario con email ${email} ya registrado`)
+            if (user) {
+                throw new ServerError('El email ya esta registrado', 400)
             }
             let hashed_password = await bcrypt.hash(password, 10)
             await userRepository.crear(email, hashed_password, username)
-    
-            return response.send('Usuario creado exitosamente')
-        }
-        catch(error){
-            console.error('Error al crear usuario:', error)
 
-            return response.send('Error interno del servidor')
+            const verification_email_token = jwt.sign(
+                {
+                    email: email //Guardamos el email del usuario que se quiere registrar
+                },
+                ENVIRONMENT.JWT_SECRET_KEY/* ,
+                {
+                    expiresIn: '7d'
+                } */
+            )
+
+            mail_transporter.sendMail(
+                {
+                    from: ENVIRONMENT.GMAIL_USERNAME,
+                    to: email,
+                    subject: 'Verifica tu email',
+                    html: `
+                    <h1>Bienvenido ${username}</h1>
+                    <p>Necesitamos que verifiques tu mail</p>
+                    <p>Haz click en "Verificar" para verificar este mail</p>
+                    <a 
+                    href='http://localhost:8080/api/auth/verify-email?verification_email_token=${verification_email_token}'
+                    >Verificar</a>
+                    <br>
+                    <span>Si desconoces este registro desestima este mail</span>
+                    `
+                }
+            )
+
+            return response.json({
+                message: 'Usuario creado exitosamente',
+                status: 201,
+                ok: true,
+                data: null
+            })
+        }
+        catch (error) {
+            /* Si tiene status decimos que es un error controlado (osea es esperable) */
+            if (error.status) {
+                return response.json({
+                    status: error.status,
+                    ok: false,
+                    message: error.message,
+                    data: null
+                })
+            }
+
+            return response.json({
+                ok: false,
+                status: 500,
+                message: "Error interno del servidor",
+                data: null
+            })
         }
     }
 
-    async login (request, response){
-        const {email, password} = request.body
-        /* 
-        Aplicar validaciones sobre el email y la password
-        */
-        if(!email){
-            return response.json({
-                ok: false,
-                message: 'Debes enviar un email',
-                status: 400,
-                data: null
-            })
-        }
-        else if(!(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email))){
-            return response.json({
-                ok: false,
-                status: 400,
-                message: 'El email no es valido', 
-                data: null
-            })
-        }
-
-        const usuario_encontrado = await userRepository.buscarUnoPorEmail(email)
-
-        if(!usuario_encontrado){
-            return response.json(
-                {
-                    message: 'Credenciales invalidas', 
-                    status: 401, 
-                    ok: false,
-                    data: null
-                }
-            )
-        }
-
-        if( !( await bcrypt.compare(password, usuario_encontrado.password) ) ){     
-            /* Respondemos igual a que si no existiese para mayor seguridad */
-            return response.json(
-                {
-                    message: 'Credenciales invalidas',
-                    status: 401, 
-                    ok: false,
-                    data: null
-                }
-            )
-        }
-
-        const datos_del_token = {
-            username: usuario_encontrado.username,
-            email: usuario_encontrado.email,
-            id: usuario_encontrado.id
-        }
-
-
-        const auth_token = jwt.sign(datos_del_token, ENVIRONMENT.JWT_SECRET_KEY)
-        return response.json({
-            message: 'Inicio de sesion exitoso',
-            ok: true,
-            status: 200,
-            data: {
-                auth_token: auth_token
+    async login(request, response) {
+        try {
+            const { email, password } = request.body
+            /* 
+            Aplicar validaciones sobre el email y la password
+            */
+            if (!email) {
+                throw new ServerError('Debes enviar un email', 400)
             }
-        })
+            else if (!(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email))) {
+                throw new ServerError('El email no es valido', 400)
+            }
+
+            const usuario_encontrado = await userRepository.buscarUnoPorEmail(email)
+
+            if (!usuario_encontrado) {
+                throw new ServerError('Credenciales invalidas', 401)
+            }
+
+            if (!(await bcrypt.compare(password, usuario_encontrado.password))) {
+                /* Respondemos igual a que si no existiese para mayor seguridad */
+                throw new ServerError('Credenciales invalidas', 401)
+            }
+
+            if (!usuario_encontrado.email_verified) {
+                throw new ServerError('Usuario con email no verificado', 401)
+            }
+
+            const datos_del_token = {
+                username: usuario_encontrado.username,
+                email: usuario_encontrado.email,
+                id: usuario_encontrado.id
+            }
+
+
+            const auth_token = jwt.sign(datos_del_token, ENVIRONMENT.JWT_SECRET_KEY)
+            return response.json({
+                message: 'Inicio de sesion exitoso',
+                ok: true,
+                status: 200,
+                data: {
+                    auth_token: auth_token
+                }
+            })
+        }
+        catch (error) {
+            /* Si tiene status decimos que es un error controlado (osea es esperable) */
+            if (error.status) {
+                return response.json({
+                    status: error.status,
+                    ok: false,
+                    message: error.message,
+                    data: null
+                })
+            }
+
+            return response.json({
+                ok: false,
+                status: 500,
+                message: "Error interno del servidor",
+                data: null
+            })
+        }
+
+    }
+
+    async verifyEmail(request, response) {
+        try {
+            const { verification_email_token } = request.query
+
+            if (!verification_email_token) {
+                throw new ServerError('No se envio el token de verificacion', 400)
+            }
+
+            const { email } = jwt.verify(
+                verification_email_token,
+                ENVIRONMENT.JWT_SECRET_KEY
+            )
+
+            const user_found = await userRepository.buscarUnoPorEmail(email)
+
+            if (!user_found) {
+                throw new ServerError('No existe usuario con ese mail', 404)
+            }
+
+            if (user_found.email_verified) {
+                throw new ServerError('Usuario ya verificado', 400)
+            }
+
+            await userRepository.actualizarPorId(
+                user_found._id,
+                {
+                    email_verified: true
+                }
+            )
+            return response.json(
+                {
+                    ok: true,
+                    status: 200,
+                    message: "usuario verificado",
+                    data: null
+                }
+            )
+            /* 
+            Redireccionar al frontend
+            return response.redirect(
+                'http://localhost:3000'
+            ) 
+            */
+        }
+        catch (error) {
+            if (error instanceof jwt.JsonWebTokenError) {
+                return response.json(
+                    {
+                        ok: false,
+                        status: 401,
+                        message: "No autorizado",
+                        data: null
+                    }
+                )
+            }
+
+            /* Si tiene status decimos que es un error controlado (osea es esperable) */
+            if (error.status) {
+                return response.json({
+                    status: error.status,
+                    ok: false,
+                    message: error.message,
+                    data: null
+                })
+            }
+
+            return response.json({
+                ok: false,
+                status: 500,
+                message: "Error interno del servidor",
+                data: null
+            })
+        }
     }
 }
 

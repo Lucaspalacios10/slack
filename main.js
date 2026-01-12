@@ -30,9 +30,9 @@ app.listen(
     }
 )
 
-mail_transporter.sendMail({
+/* mail_transporter.sendMail({
     from: ENVIRONMENT.GMAIL_USERNAME,
     to: ENVIRONMENT.GMAIL_USERNAME,
     subject: 'Correo de prueba desde Node.js',
     html: '<h1>Este es un correo de prueba</h1>'
-})
+}) */
