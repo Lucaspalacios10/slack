@@ -6,13 +6,14 @@ import testRouter from "./routes/test.router.js";
 import authRouter from "./routes/auth.router.js";
 import mail_transporter from "./config/mail.config.js";
 import ENVIRONMENT from "./config/Environment.config.js";
+import cors from "cors";
 
 
 connectMongoDB()
 
 //Crear un servidor web (Express app)
 const app = express()
-
+app.use(cors())
 
 //Habilita a mi servidor a recibir json por body
 app.use(express.json())
