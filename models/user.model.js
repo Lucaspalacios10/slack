@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema(
         active:{
             type: Boolean,
             default: true
+        },
+        email_verified:{
+            type: Boolean,
+            default: false
         }
     }
 )
