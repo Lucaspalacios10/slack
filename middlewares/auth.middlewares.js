@@ -18,7 +18,7 @@ Tomar el token que envie el cliente, verificar y determinar la sesion:
 
 import jwt from 'jsonwebtoken'
 import ENVIRONMENT from '../config/Environment.config.js'
-import ServerError from '../helpers/error.herlpers.js'
+import ServerError from '../helpers/error.helpers.js'
 function authMiddleware (request, response, next){
     try{
         /* Normalmente el token de auth se envia en el header 'Authorization' */

@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import ENVIRONMENT from '../config/Environment.config.js';
 import mail_transporter from '../config/mail.config.js';
-import ServerError from '../helpers/error.herlpers.js';
+import ServerError from '../helpers/error.helpers.js';
 
 class AuthController {
     async register(request, response) {

@@ -1,11 +1,8 @@
 import { connectMongoDB } from "./config/mongoDB.config.js";
-import User from "./models/user.model.js";
-import UserRepository from "./Repository/user.repository.js";
 import express, { request, response } from "express";
-import testRouter from "./routes/test.router.js";
 import authRouter from "./routes/auth.router.js";
-import mail_transporter from "./config/mail.config.js";
-import ENVIRONMENT from "./config/Environment.config.js";
+import workspaceRouter from "./routes/workspace.router.js";
+import workspaceRepository from "./Repository/workspace.repository.js";
 import cors from "cors";
 
 
@@ -19,8 +16,22 @@ app.use(cors())
 app.use(express.json())
 
 
-app.use('/api/test', testRouter)
 app.use("/api/auth", authRouter)
+app.use("/api/workspace",  workspaceRouter)
+/*  async function crearEspacioDeTrabajo (){
+
+    //Creo el espacio de trabajo de prueba
+    const workspace = await workspaceRepository.create(
+        '696f73124c45ed630e4780ff', //Remplazen por su id
+        'test',
+        'https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+        'Descripcion del espacio de trabajo'
+    )
+    //Me agrego como miembro
+    await workspaceRepository.addMember(workspace._id, '696f73124c45ed630e4780ff', 'Owner')
+}
+
+crearEspacioDeTrabajo()  */
 
 
 
