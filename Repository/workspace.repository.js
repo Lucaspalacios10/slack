@@ -11,7 +11,7 @@ class WorkspaceRepository {
         //Esto seria buscar todas mis membresias
         const workspaces = await MemberWorkspace.find({fk_id_user: user_id})
         .populate({
-            path: 'fk_id_workspace',
+            path: 'fk_id_Workspace',
             match: {active: true}
         }) //Esto permite expandir sobre la referencia a la tabla de espacios de trabajo
 
